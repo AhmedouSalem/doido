@@ -1,52 +1,48 @@
-import 'core/bindings/addtaskbinding.dart';
-import 'core/bindings/edittaskbinding.dart';
-import 'core/bindings/tasklistbinding.dart';
-import './controller/locale.dart';
-import 'view/screen/addtask.dart';
-import 'view/screen/edittask.dart';
-import 'view/screen/read.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'app/di.dart';
+import 'features/tasks/presentation/bloc/tasks_list_bloc.dart';
+import 'features/tasks/presentation/pages/tasks_list_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const TodoManagerApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TodoManagerApp extends StatelessWidget {
+  const TodoManagerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+    final colorScheme = ColorScheme.fromSeed(seedColor: Colors.indigo);
+
+    return MaterialApp(
+      title: 'TodoManager',
       theme: ThemeData(
-        textTheme: const TextTheme(
-          labelSmall: TextStyle(),
-        ),
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        colorScheme: colorScheme,
+        appBarTheme: AppBarTheme(
+          centerTitle: false,
+          backgroundColor: colorScheme.surface,
+          foregroundColor: colorScheme.onSurface,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 0,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(),
+        ),
       ),
-      translations: MyLocaleController(),
-      locale: Get.deviceLocale,
-      initialRoute: "/read",
-      getPages: [
-        GetPage(
-          name: "/read",
-          page: () => const Read(),
-          binding: TaskListBindings(),
+      home: BlocProvider(
+        create: (_) => TasksListBloc(
+          getTasks: DI.getTasks,
+          deleteTask: DI.deleteTask,
+          completeTask: DI.completeTask,
         ),
-        GetPage(
-          name: "/addTask",
-          page: () => const AddTask(),
-          binding: AddTaskBinding(),
-        ),
-        GetPage(
-          name: "/editTask",
-          page: () => const EditTask(),
-          binding: EditTaskBinding(),
-        )
-      ],
+        child: const TasksListPage(),
+      ),
     );
   }
 }
