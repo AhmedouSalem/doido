@@ -64,6 +64,7 @@ class _TasksListPageState extends State<TasksListPage> {
                       Text(state.message),
                       const SizedBox(height: 12),
                       ElevatedButton(
+                        key: const Key('tasks_retry_button'),
                         onPressed: () => context
                             .read<TasksListBloc>()
                             .add(const TasksRequested()),
@@ -89,6 +90,7 @@ class _TasksListPageState extends State<TasksListPage> {
                         child: Column(
                           children: [
                             TextField(
+                              key: const Key('tasks_search_field'),
                               controller: _searchCtrl,
                               onChanged: (_) => setState(() {}),
                               decoration: InputDecoration(
@@ -97,6 +99,7 @@ class _TasksListPageState extends State<TasksListPage> {
                                 suffixIcon: _searchCtrl.text.isEmpty
                                     ? null
                                     : IconButton(
+                                        key: const Key('tasks_search_clear'),
                                         icon: const Icon(Icons.clear),
                                         onPressed: () {
                                           _searchCtrl.clear();
@@ -121,7 +124,12 @@ class _TasksListPageState extends State<TasksListPage> {
                   if (view.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Center(child: Text('Aucune tâche.')),
+                      child: Center(
+                        child: Text(
+                          'Aucune tâche.',
+                          key: Key('tasks_empty_label'),
+                        ),
+                      ),
                     )
                   else
                     SliverPadding(
@@ -167,49 +175,54 @@ class _TasksListPageState extends State<TasksListPage> {
                                 ),
                               );
                             },
-                            child: TaskCard(
-                              task: task,
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        TaskDetailPage(taskId: task.id),
-                                  ),
-                                );
-
-                                if (context.mounted) {
-                                  context
-                                      .read<TasksListBloc>()
-                                      .add(const TasksRefreshed());
-                                }
-                              },
-                              onDelete: () async {
-                                final ok = await _confirmDelete(context, task);
-                                if (ok && context.mounted) {
-                                  context
-                                      .read<TasksListBloc>()
-                                      .add(TaskDismissed(task));
-                                  ScaffoldMessenger.of(context)
-                                      .clearSnackBars();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content:
-                                          Text('“${task.title}” supprimée'),
-                                      action: SnackBarAction(
-                                        label: 'Annuler',
-                                        onPressed: () => context
-                                            .read<TasksListBloc>()
-                                            .add(TaskUndoDeleteRequested(
-                                                task.id)),
-                                      ),
+                            child: Semantics(
+                              label: 'task_card_${task.id}',
+                              child: TaskCard(
+                                key: ValueKey('task_card_${task.id}'),
+                                task: task,
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          TaskDetailPage(taskId: task.id),
                                     ),
                                   );
-                                }
-                              },
-                              onMarkDone: () => context
-                                  .read<TasksListBloc>()
-                                  .add(TaskMarkDoneRequested(task.id)),
+
+                                  if (context.mounted) {
+                                    context
+                                        .read<TasksListBloc>()
+                                        .add(const TasksRefreshed());
+                                  }
+                                },
+                                onDelete: () async {
+                                  final ok =
+                                      await _confirmDelete(context, task);
+                                  if (ok && context.mounted) {
+                                    context
+                                        .read<TasksListBloc>()
+                                        .add(TaskDismissed(task));
+                                    ScaffoldMessenger.of(context)
+                                        .clearSnackBars();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('“${task.title}” supprimée'),
+                                        action: SnackBarAction(
+                                          label: 'Annuler',
+                                          onPressed: () => context
+                                              .read<TasksListBloc>()
+                                              .add(TaskUndoDeleteRequested(
+                                                  task.id)),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                onMarkDone: () => context
+                                    .read<TasksListBloc>()
+                                    .add(TaskMarkDoneRequested(task.id)),
+                              ),
                             ),
                           );
                         },
@@ -220,23 +233,28 @@ class _TasksListPageState extends State<TasksListPage> {
             },
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          icon: const Icon(Icons.add),
-          label: const Text('Nouvelle tâche'),
-          onPressed: () async {
-            final created = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (_) => TaskFormBloc(createTask: DI.createTask),
-                  child: const TaskFormPage(),
+        floatingActionButton: Semantics(
+          label: 'create_task',
+          button: true,
+          child: FloatingActionButton.extended(
+            key: const Key('fab_create_task'),
+            icon: const Icon(Icons.add),
+            label: const Text('Nouvelle tâche'),
+            onPressed: () async {
+              final created = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => TaskFormBloc(createTask: DI.createTask),
+                    child: const TaskFormPage(),
+                  ),
                 ),
-              ),
-            );
-            if (created == true && context.mounted) {
-              context.read<TasksListBloc>().add(const TasksRefreshed());
-            }
-          },
+              );
+              if (created == true && context.mounted) {
+                context.read<TasksListBloc>().add(const TasksRefreshed());
+              }
+            },
+          ),
         ),
       ),
     );
@@ -304,6 +322,7 @@ class _TasksListPageState extends State<TasksListPage> {
   Widget _chip(TaskFilter f, String label) {
     final selected = _filter == f;
     return ChoiceChip(
+      key: Key('filter_${f.name}'),
       label: Text(label),
       selected: selected,
       onSelected: (_) => setState(() => _filter = f),
@@ -312,6 +331,7 @@ class _TasksListPageState extends State<TasksListPage> {
 
   Widget _sortMenu() {
     return PopupMenuButton<TaskSort>(
+      key: const Key('tasks_sort_menu'),
       tooltip: 'Trier',
       onSelected: (v) => setState(() => _sort = v),
       itemBuilder: (context) => const [
@@ -339,11 +359,15 @@ class _TasksListPageState extends State<TasksListPage> {
         content: Text('“${task.title}” sera supprimée.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler')),
+            key: const Key('delete_cancel'),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Supprimer')),
+            key: const Key('delete_confirm'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer'),
+          ),
         ],
       ),
     );

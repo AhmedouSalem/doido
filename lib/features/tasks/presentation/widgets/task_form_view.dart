@@ -8,18 +8,16 @@ class TaskFormView extends StatefulWidget {
   final String initialTitle;
   final String? initialDescription;
 
-  // obligatoire (UI) : default = today
+  // default = today
   final DateTime? initialDueDate;
 
-  // obligatoire (UI) : default = now
+  // default = now
   final int? initialTimeStart;
 
   // obligatoire si !isReminder : default = start + 30min
   final int? initialTimeEnd;
 
   final bool initialIsReminder;
-
-  // Pour afficher un preview status (create/edit)
   final TaskStatus statusPreview;
 
   final bool submitting;
@@ -79,9 +77,6 @@ class _TaskFormViewState extends State<TaskFormView> {
 
     final defaultEnd = (_timeStart + 30).clamp(0, 1439);
     _timeEnd = widget.initialTimeEnd ?? (_isReminder ? null : defaultEnd);
-
-    // format 24h (force)
-    // -> géré via MediaQuery override dans showTimePicker
   }
 
   @override
@@ -95,149 +90,206 @@ class _TaskFormViewState extends State<TaskFormView> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            // ---- Status Preview ----
-            Row(
-              children: [
-                const Text('Statut: '),
-                _StatusChip(status: widget.statusPreview),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            // ---- Section: Infos ----
-            Text('Informations',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 10),
-
-            TextField(
-              controller: _titleCtrl,
-              onChanged: (_) => _validateTitle(live: true),
-              decoration: InputDecoration(
-                labelText: 'Titre *',
-                border: const OutlineInputBorder(),
-                errorText: _titleError,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            TextField(
-              controller: _descCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Description (optionnelle)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // ---- Section: Échéance ----
-            Text('Échéance', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 10),
-
-            Card(
-              color: scheme.surfaceContainerHighest,
-              child: ListTile(
-                title: const Text('Date *'),
-                subtitle: Text(_fmtDate(_dueDate)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.event),
-                  onPressed:
-                      widget.submitting ? null : () => _pickDueDate(context),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // ---- Section: Temps ----
-            Row(
-              children: [
-                Expanded(
-                  child: Text('Temps',
-                      style: Theme.of(context).textTheme.titleMedium),
-                ),
-                Switch(
-                  value: _isReminder,
-                  onChanged: widget.submitting
-                      ? null
-                      : (v) {
-                          setState(() {
-                            _isReminder = v;
-                            if (_isReminder) {
-                              _timeEnd = null;
-                            } else {
-                              _timeEnd ??= (_timeStart + 30).clamp(0, 1439);
-                            }
-                          });
-                          _validateTimes(live: true);
-                        },
-                ),
-                const SizedBox(width: 6),
-                const Text('Rappel'),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            if (_timeError != null) ...[
-              Text(_timeError!, style: TextStyle(color: scheme.error)),
-              const SizedBox(height: 8),
-            ],
-
-            Card(
-              color: scheme.surfaceContainerHighest,
-              child: Column(
+    return Semantics(
+      label: 'task_form_screen',
+      child: Scaffold(
+        key: const Key('task_form_scaffold'),
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
+              // ---- Status Preview ----
+              Row(
                 children: [
-                  ListTile(
-                    title: const Text('Heure de début *'),
-                    subtitle: Text(_fmtTime(_timeStart)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.access_time),
-                      onPressed: widget.submitting
-                          ? null
-                          : () => _pickStartTime(context),
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    enabled: !_isReminder,
-                    title: Text(_isReminder
-                        ? 'Heure de fin (désactivée)'
-                        : 'Heure de fin *'),
-                    subtitle: Text(_isReminder ? '—' : _fmtTime(_timeEnd)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.access_time_filled),
-                      onPressed: widget.submitting || _isReminder
-                          ? null
-                          : () => _pickEndTime(context),
-                    ),
+                  const Text('Statut: '),
+                  Semantics(
+                    label: 'task_status_preview',
+                    child: _StatusChip(status: widget.statusPreview),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 14),
 
-            const SizedBox(height: 22),
+              // ---- Section: Infos ----
+              Text('Informations',
+                  key: const Key('task_form_section_info'),
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 10),
 
-            // ---- CTA ----
-            FilledButton(
-              onPressed: widget.submitting ? null : _submit,
-              child: widget.submitting
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(widget.submitLabel),
-            ),
-          ],
+              TextField(
+                key: const Key('task_form_title_field'),
+                controller: _titleCtrl,
+                onChanged: (_) => _validateTitle(live: true),
+                decoration: InputDecoration(
+                  labelText: 'Titre *',
+                  border: const OutlineInputBorder(),
+                  errorText: _titleError,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              TextField(
+                key: const Key('task_form_description_field'),
+                controller: _descCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optionnelle)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              // ---- Section: Échéance ----
+              Text('Échéance',
+                  key: const Key('task_form_section_due'),
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 10),
+
+              Card(
+                key: const Key('task_form_due_card'),
+                color: scheme.surfaceContainerHighest,
+                child: ListTile(
+                  key: const Key('task_form_due_tile'),
+                  title: const Text('Date *'),
+                  subtitle: Text(
+                    _fmtDate(_dueDate),
+                    key: const Key('task_form_due_value'),
+                  ),
+                  trailing: Semantics(
+                    label: 'pick_due_date',
+                    button: true,
+                    child: IconButton(
+                      key: const Key('task_form_due_pick_button'),
+                      icon: const Icon(Icons.event),
+                      onPressed: widget.submitting
+                          ? null
+                          : () => _pickDueDate(context),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              // ---- Section: Temps ----
+              Row(
+                children: [
+                  Expanded(
+                    child: Text('Temps',
+                        key: const Key('task_form_section_time'),
+                        style: Theme.of(context).textTheme.titleMedium),
+                  ),
+                  Semantics(
+                    label: 'toggle_reminder',
+                    child: Switch(
+                      key: const Key('task_form_reminder_switch'),
+                      value: _isReminder,
+                      onChanged: widget.submitting
+                          ? null
+                          : (v) {
+                              setState(() {
+                                _isReminder = v;
+                                if (_isReminder) {
+                                  _timeEnd = null;
+                                } else {
+                                  _timeEnd ??= (_timeStart + 30).clamp(0, 1439);
+                                }
+                              });
+                              _validateTimes(live: true);
+                            },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text('Rappel'),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              if (_timeError != null) ...[
+                Text(
+                  _timeError!,
+                  key: const Key('task_form_time_error'),
+                  style: TextStyle(color: scheme.error),
+                ),
+                const SizedBox(height: 8),
+              ],
+
+              Card(
+                key: const Key('task_form_time_card'),
+                color: scheme.surfaceContainerHighest,
+                child: Column(
+                  children: [
+                    ListTile(
+                      key: const Key('task_form_start_time_tile'),
+                      title: const Text('Heure de début *'),
+                      subtitle: Text(
+                        _fmtTime(_timeStart),
+                        key: const Key('task_form_start_time_value'),
+                      ),
+                      trailing: Semantics(
+                        label: 'pick_start_time',
+                        button: true,
+                        child: IconButton(
+                          key: const Key('task_form_start_time_pick_button'),
+                          icon: const Icon(Icons.access_time),
+                          onPressed: widget.submitting
+                              ? null
+                              : () => _pickStartTime(context),
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      key: const Key('task_form_end_time_tile'),
+                      enabled: !_isReminder,
+                      title: Text(_isReminder
+                          ? 'Heure de fin (désactivée)'
+                          : 'Heure de fin *'),
+                      subtitle: Text(
+                        _isReminder ? '—' : _fmtTime(_timeEnd),
+                        key: const Key('task_form_end_time_value'),
+                      ),
+                      trailing: Semantics(
+                        label: 'pick_end_time',
+                        button: true,
+                        child: IconButton(
+                          key: const Key('task_form_end_time_pick_button'),
+                          icon: const Icon(Icons.access_time_filled),
+                          onPressed: widget.submitting || _isReminder
+                              ? null
+                              : () => _pickEndTime(context),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              // ---- CTA ----
+              Semantics(
+                label: 'submit_task',
+                button: true,
+                child: FilledButton(
+                  key: const Key('task_form_submit_button'),
+                  onPressed: widget.submitting ? null : _submit,
+                  child: widget.submitting
+                      ? const SizedBox(
+                          key: Key('task_form_submitting_spinner'),
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(widget.submitLabel),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -402,13 +454,16 @@ class _StatusChip extends StatelessWidget {
         ),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration:
-          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(label,
-          style:
-              TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 12)),
+    return Semantics(
+      label: 'status_chip_${status.name}',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration:
+            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+        child: Text(label,
+            style: TextStyle(
+                color: fg, fontWeight: FontWeight.w600, fontSize: 12)),
+      ),
     );
   }
 }

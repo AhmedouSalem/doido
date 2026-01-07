@@ -26,33 +26,37 @@ class TaskFormPage extends StatelessWidget {
         builder: (context, state) {
           final submitting = state is TaskFormSubmitting;
 
-          return TaskFormView(
-            title: 'Créer une tâche',
-            submitLabel: 'Créer',
-            submitting: submitting,
-            statusPreview: TaskStatus.pending,
-            initialDueDate: DateTime.now(),
-            initialTimeStart: null, // laisse le widget prendre "now"
-            initialTimeEnd: null,
-            initialIsReminder: false,
-            onSubmit: (
-                {required String title,
-                String? description,
-                required DateTime dueDate,
-                required int timeStart,
-                int? timeEnd,
-                required bool isReminder}) {
-              context.read<TaskFormBloc>().add(
-                    TaskCreateSubmitted(
-                      title: title,
-                      description: description,
-                      dueDate: dueDate,
-                      timeStart: timeStart,
-                      timeEnd: timeEnd,
-                      isReminder: isReminder,
-                    ),
-                  );
-            },
+          return Semantics(
+            label: 'task_form_page',
+            child: TaskFormView(
+              key: const Key('task_form_view'),
+              title: 'Créer une tâche',
+              submitLabel: 'Créer',
+              submitting: submitting,
+              statusPreview: TaskStatus.pending,
+              initialDueDate: DateTime.now(),
+              initialTimeStart: null,
+              initialTimeEnd: null,
+              initialIsReminder: false,
+              onSubmit: (
+                  {required String title,
+                  String? description,
+                  required DateTime dueDate,
+                  required int timeStart,
+                  int? timeEnd,
+                  required bool isReminder}) {
+                context.read<TaskFormBloc>().add(
+                      TaskCreateSubmitted(
+                        title: title,
+                        description: description,
+                        dueDate: dueDate,
+                        timeStart: timeStart,
+                        timeEnd: timeEnd,
+                        isReminder: isReminder,
+                      ),
+                    );
+              },
+            ),
           );
         },
       ),

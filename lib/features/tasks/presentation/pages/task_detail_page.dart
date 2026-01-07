@@ -34,19 +34,26 @@ class _TaskDetailScaffold extends StatelessWidget {
       builder: (context, state) {
         if (state is TaskDetailLoading) {
           return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+            key: Key('task_detail_loading_scaffold'),
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (state is TaskDetailFailure) {
           return Scaffold(
+            key: const Key('task_detail_failure_scaffold'),
             appBar: AppBar(title: const Text('Détail')),
             body: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(state.message),
+                  Text(
+                    state.message,
+                    key: const Key('task_detail_error_message'),
+                  ),
                   const SizedBox(height: 12),
                   ElevatedButton(
+                    key: const Key('task_detail_retry_button'),
                     onPressed: () => context
                         .read<TaskDetailBloc>()
                         .add(TaskDetailRequested(taskId)),
@@ -61,152 +68,188 @@ class _TaskDetailScaffold extends StatelessWidget {
         final t = (state as TaskDetailLoaded).task;
         final scheme = Theme.of(context).colorScheme;
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Détail'),
-            actions: [
-              IconButton(
-                tooltip: 'Modifier',
-                icon: const Icon(Icons.edit),
-                onPressed: () async {
-                  final updated = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BlocProvider(
-                        create: (_) => TaskEditBloc(
-                          getTaskById: DI.getTaskById,
-                          updateTask: DI.updateTask,
+        return Semantics(
+          label: 'task_detail_page_${t.id}',
+          child: Scaffold(
+            key: ValueKey('task_detail_scaffold_${t.id}'),
+            appBar: AppBar(
+              title: const Text('Détail'),
+              actions: [
+                Semantics(
+                  label: 'task_detail_edit_action_${t.id}',
+                  button: true,
+                  child: IconButton(
+                    key: ValueKey('task_detail_edit_icon_${t.id}'),
+                    tooltip: 'Modifier',
+                    icon: const Icon(Icons.edit),
+                    onPressed: () async {
+                      final updated = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BlocProvider(
+                            create: (_) => TaskEditBloc(
+                              getTaskById: DI.getTaskById,
+                              updateTask: DI.updateTask,
+                            ),
+                            child: TaskEditPage(taskId: taskId),
+                          ),
                         ),
-                        child: TaskEditPage(taskId: taskId),
-                      ),
-                    ),
-                  );
+                      );
 
-                  if (updated == true && context.mounted) {
-                    context
-                        .read<TaskDetailBloc>()
-                        .add(TaskDetailRequested(taskId));
-                  }
-                },
-              ),
-            ],
-          ),
-
-          // ---- Premium body ----
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: ListView(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        t.title,
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  decoration: t.status == TaskStatus.done
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    _StatusChip(status: t.status),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    _InfoCard(
-                      icon: Icons.event,
-                      title: 'Date',
-                      value: t.dueDate == null ? '—' : _fmtDate(t.dueDate!),
-                    ),
-                    _InfoCard(
-                      icon: Icons.schedule,
-                      title: 'Heure',
-                      value: _timeLabel(t.timeStart, t.timeEnd, t.isReminder),
-                    ),
-                    _InfoCard(
-                      icon: Icons.notifications_active_outlined,
-                      title: 'Type',
-                      value: t.isReminder ? 'Rappel' : 'Tâche',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Card(
-                  color: scheme.surfaceContainerHighest,
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Description',
-                            style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Text(
-                          (t.description == null ||
-                                  t.description!.trim().isEmpty)
-                              ? 'Aucune description.'
-                              : t.description!.trim(),
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                      if (updated == true && context.mounted) {
+                        context
+                            .read<TaskDetailBloc>()
+                            .add(TaskDetailRequested(taskId));
+                      }
+                    },
                   ),
                 ),
               ],
             ),
-          ),
 
-          // ---- Sticky actions ----
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: Row(
+            // ---- Premium body ----
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: ListView(
                 children: [
-                  Expanded(
-                    child: FilledButton.tonalIcon(
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Modifier'),
-                      onPressed: () async {
-                        final updated = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => TaskEditBloc(
-                                getTaskById: DI.getTaskById,
-                                updateTask: DI.updateTask,
-                              ),
-                              child: TaskEditPage(taskId: taskId),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Semantics(
+                          label: 'task_detail_title_${t.id}',
+                          child: Text(
+                            t.title,
+                            key: ValueKey('task_detail_title_${t.id}'),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(
+                                  decoration: t.status == TaskStatus.done
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Semantics(
+                        label: 'task_detail_status_${t.id}_${t.status.name}',
+                        child: _StatusChip(status: t.status),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _InfoCard(
+                        icon: Icons.event,
+                        title: 'Date',
+                        value: t.dueDate == null ? '—' : _fmtDate(t.dueDate!),
+                      ),
+                      _InfoCard(
+                        icon: Icons.schedule,
+                        title: 'Heure',
+                        value: _timeLabel(t.timeStart, t.timeEnd, t.isReminder),
+                      ),
+                      _InfoCard(
+                        icon: Icons.notifications_active_outlined,
+                        title: 'Type',
+                        value: t.isReminder ? 'Rappel' : 'Tâche',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    key: ValueKey('task_detail_description_card_${t.id}'),
+                    color: scheme.surfaceContainerHighest,
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Description',
+                            key: const Key('task_detail_description_label'),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Semantics(
+                            label: 'task_detail_description_${t.id}',
+                            child: Text(
+                              (t.description == null ||
+                                      t.description!.trim().isEmpty)
+                                  ? 'Aucune description.'
+                                  : t.description!.trim(),
+                              key: ValueKey('task_detail_description_${t.id}'),
+                              style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
-                        );
-                        if (updated == true && context.mounted) {
-                          context
-                              .read<TaskDetailBloc>()
-                              .add(TaskDetailRequested(taskId));
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton.icon(
-                      icon: const Icon(Icons.check),
-                      label: const Text('Done'),
-                      onPressed: t.status == TaskStatus.done
-                          ? null
-                          : () => context
-                              .read<TaskDetailBloc>()
-                              .add(TaskMarkedDone(taskId)),
+                        ],
+                      ),
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // ---- Sticky actions ----
+            bottomNavigationBar: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(
+                        label: 'task_detail_edit_button_${t.id}',
+                        button: true,
+                        child: FilledButton.tonalIcon(
+                          key: ValueKey('task_detail_edit_btn_${t.id}'),
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Modifier'),
+                          onPressed: () async {
+                            final updated = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => BlocProvider(
+                                  create: (_) => TaskEditBloc(
+                                    getTaskById: DI.getTaskById,
+                                    updateTask: DI.updateTask,
+                                  ),
+                                  child: TaskEditPage(taskId: taskId),
+                                ),
+                              ),
+                            );
+                            if (updated == true && context.mounted) {
+                              context
+                                  .read<TaskDetailBloc>()
+                                  .add(TaskDetailRequested(taskId));
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Semantics(
+                        label: 'task_detail_done_button_${t.id}',
+                        button: true,
+                        child: FilledButton.icon(
+                          key: ValueKey('task_detail_done_btn_${t.id}'),
+                          icon: const Icon(Icons.check),
+                          label: const Text('Done'),
+                          onPressed: t.status == TaskStatus.done
+                              ? null
+                              : () => context
+                                  .read<TaskDetailBloc>()
+                                  .add(TaskMarkedDone(taskId)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -26,76 +26,122 @@ class TaskCard extends StatelessWidget {
               : null,
         );
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _StatusDot(status: task.status),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(child: Text(task.title, style: titleStyle)),
-                        const SizedBox(width: 8),
-                        _StatusChip(status: task.status),
-                      ],
-                    ),
-                    if (task.description != null &&
-                        task.description!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        task.description!.trim(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
+    return Semantics(
+      label: 'task_card_${task.id}',
+      child: Card(
+        child: InkWell(
+          key: ValueKey('task_card_tap_${task.id}'),
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  label: 'task_status_dot_${task.id}_${task.status.name}',
+                  child: _StatusDot(status: task.status),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Semantics(
+                              label: 'task_title_${task.id}',
+                              child: Text(
+                                task.title,
+                                key: ValueKey('task_title_${task.id}'),
+                                style: titleStyle,
+                              ),
                             ),
-                      ),
-                    ],
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        if (task.dueDate != null)
-                          _InfoPill(
-                              icon: Icons.event, text: _fmtDate(task.dueDate!)),
-                        if (task.timeStart != null && task.timeEnd != null)
-                          _InfoPill(
-                              icon: Icons.schedule,
-                              text:
-                                  '${_fmtTime(task.timeStart!)} - ${_fmtTime(task.timeEnd!)}'),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        if (task.status != TaskStatus.done)
-                          FilledButton.icon(
-                            onPressed: onMarkDone,
-                            icon: const Icon(Icons.check),
-                            label: const Text('Done'),
                           ),
-                        const Spacer(),
-                        IconButton(
-                          tooltip: 'Supprimer',
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete_outline),
+                          const SizedBox(width: 8),
+                          Semantics(
+                            label:
+                                'task_status_chip_${task.id}_${task.status.name}',
+                            child: _StatusChip(status: task.status),
+                          ),
+                        ],
+                      ),
+                      if (task.description != null &&
+                          task.description!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Semantics(
+                          label: 'task_description_${task.id}',
+                          child: Text(
+                            task.description!.trim(),
+                            key: ValueKey('task_description_${task.id}'),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                          ),
                         ),
                       ],
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          if (task.dueDate != null)
+                            Semantics(
+                              label: 'task_due_${task.id}',
+                              child: _InfoPill(
+                                icon: Icons.event,
+                                text: _fmtDate(task.dueDate!),
+                              ),
+                            ),
+                          if (task.timeStart != null && task.timeEnd != null)
+                            Semantics(
+                              label: 'task_time_${task.id}',
+                              child: _InfoPill(
+                                icon: Icons.schedule,
+                                text:
+                                    '${_fmtTime(task.timeStart!)} - ${_fmtTime(task.timeEnd!)}',
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          if (task.status != TaskStatus.done)
+                            Semantics(
+                              label: 'task_mark_done_${task.id}',
+                              button: true,
+                              child: FilledButton.icon(
+                                key: ValueKey('task_done_btn_${task.id}'),
+                                onPressed: onMarkDone,
+                                icon: const Icon(Icons.check),
+                                label: const Text('Done'),
+                              ),
+                            ),
+                          const Spacer(),
+                          Semantics(
+                            label: 'task_delete_${task.id}',
+                            button: true,
+                            child: IconButton(
+                              key: ValueKey('task_delete_btn_${task.id}'),
+                              tooltip: 'Supprimer',
+                              onPressed: onDelete,
+                              icon: const Icon(Icons.delete_outline),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -108,7 +154,6 @@ class TaskCard extends StatelessWidget {
     final m = local.month.toString().padLeft(2, '0');
     final day = local.day.toString().padLeft(2, '0');
     return '$day/$m/$y';
-    // si tu veux “Aujourd’hui/Demain”, on le fera après
   }
 
   String _fmtTime(int minutes) {
@@ -150,9 +195,10 @@ class _StatusChip extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label,
-          style:
-              TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 12)),
+      child: Text(
+        label,
+        style: TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 12),
+      ),
     );
   }
 }

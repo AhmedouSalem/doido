@@ -27,20 +27,26 @@ class TaskEditPage extends StatelessWidget {
           if (state is TaskEditLoading) {
             context.read<TaskEditBloc>().add(TaskEditRequested(taskId));
             return const Scaffold(
+              key: Key('task_edit_loading_scaffold'),
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
           if (state is TaskEditFailure) {
             return Scaffold(
+              key: const Key('task_edit_failure_scaffold'),
               appBar: AppBar(title: const Text('Modifier')),
               body: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(state.message),
+                    Text(
+                      state.message,
+                      key: const Key('task_edit_error_message'),
+                    ),
                     const SizedBox(height: 12),
                     ElevatedButton(
+                      key: const Key('task_edit_retry_button'),
                       onPressed: () => context
                           .read<TaskEditBloc>()
                           .add(TaskEditRequested(taskId)),
@@ -59,42 +65,46 @@ class TaskEditPage extends StatelessWidget {
 
             final submitting = state is TaskEditSubmitting;
 
-            return TaskFormView(
-              title: 'Modifier la tâche',
-              submitLabel: 'Enregistrer',
-              submitting: submitting,
+            return Semantics(
+              label: 'task_edit_page_$taskId',
+              child: TaskFormView(
+                key: const Key('task_edit_form_view'),
+                title: 'Modifier la tâche',
+                submitLabel: 'Enregistrer',
+                submitting: submitting,
 
-              // 🔎 Preview
-              statusPreview: task.status,
+                // Preview
+                statusPreview: task.status,
 
-              // 🔁 Pré-remplissage
-              initialTitle: task.title,
-              initialDescription: task.description,
-              initialDueDate: task.dueDate,
-              initialTimeStart: task.timeStart,
-              initialTimeEnd: task.timeEnd,
-              initialIsReminder: task.isReminder,
+                // Pré-remplissage
+                initialTitle: task.title,
+                initialDescription: task.description,
+                initialDueDate: task.dueDate,
+                initialTimeStart: task.timeStart,
+                initialTimeEnd: task.timeEnd,
+                initialIsReminder: task.isReminder,
 
-              onSubmit: ({
-                required String title,
-                String? description,
-                required DateTime dueDate,
-                required int timeStart,
-                int? timeEnd,
-                required bool isReminder,
-              }) {
-                context.read<TaskEditBloc>().add(
-                      TaskEditSubmitted(
-                        id: taskId,
-                        title: title,
-                        description: description,
-                        dueDate: dueDate,
-                        timeStart: timeStart,
-                        timeEnd: timeEnd,
-                        isReminder: isReminder,
-                      ),
-                    );
-              },
+                onSubmit: ({
+                  required String title,
+                  String? description,
+                  required DateTime dueDate,
+                  required int timeStart,
+                  int? timeEnd,
+                  required bool isReminder,
+                }) {
+                  context.read<TaskEditBloc>().add(
+                        TaskEditSubmitted(
+                          id: taskId,
+                          title: title,
+                          description: description,
+                          dueDate: dueDate,
+                          timeStart: timeStart,
+                          timeEnd: timeEnd,
+                          isReminder: isReminder,
+                        ),
+                      );
+                },
+              ),
             );
           }
 
