@@ -95,7 +95,7 @@ class _TaskFormViewState extends State<TaskFormView> {
       child: Scaffold(
         key: const Key('task_form_scaffold'),
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Semantics(label: 'task_form_title', child: Text(widget.title)),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16),

@@ -102,6 +102,7 @@ flutter run
 
 ## 🧪 Tests
 
+### Les tests unitaire
 Les tests couvrent :
 
     - la logique métier (use cases)
@@ -111,6 +112,10 @@ Les tests couvrent :
 flutter test
 ```
 
+### Tests fonctionnels automatisés
+```html
+<a href="https://github.com/AhmedouSalem/e2e-appium" alt="Automatisation des tests fonctionnels (Appium + Flutter) — TodoManager (Doido)">Automatisation des tests fonctionnels (Appium + Flutter) — TodoManager (Doido)</a>
+```
 ---
 
 ## 🚀 Évolutions possibles
