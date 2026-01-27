@@ -32,21 +32,6 @@ L’application permet de créer, consulter, modifier, finaliser et supprimer de
 - Le statut initial d’une tâche est toujours `PENDING`
 - La modification d’une tâche ne change **jamais** son statut
 - Une tâche finalisée passe à l’état `DONE`
-
----
-
-## 📸 Captures d’écran
-
-> Place tes images dans `docs/screenshots/`
-
-```text
-docs/
- └── screenshots/
-     ├── task_list.png
-     ├── task_detail.png
-     ├── task_create.png
-     ├── task_edit.png
-```
 ---
 
 ## Demonstration
