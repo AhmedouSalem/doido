@@ -77,8 +77,8 @@ Prérequis
 ## Installation
 
 ```bash
-git clone https://github.com/ton-username/todomanager.git
-cd todomanager
+git clone https://github.com/AhmedouSalem/doido.git
+cd doido
 flutter pub get
 flutter run
 ```
